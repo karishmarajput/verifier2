@@ -3,8 +3,13 @@ const cors = require('cors')
 const mongoose = require('mongoose')
 const path = require('path')
 const sgMail = require('@sendgrid/mail');
+const fileUpload = require("express-fileupload");
+const fs = require('fs')
+const pdfParse = require('pdf-parse')
+var SHA256 = require("crypto-js/sha256");
 
 const app = express()
+app.use(fileUpload());
 app.use(express.json())
 app.use(express.urlencoded())
 app.use(cors())
@@ -53,12 +58,14 @@ app.get('/signup',(req,res)=>{
 app.get('/login',(req,res)=>{
     res.sendFile(path.join(__dirname+'/webpages/index.html'))
 })
-
+app.get('/verify',(req,res)=>{
+    res.sendFile(path.join(__dirname +'/webpages/verify.html'))
+})
 app.post("/login",(req,res)=>{
     const {username,password} = req.body
     console.log(req.body)
-    UserAdminHardCoded = 'Vinayak';
-    UserAdminPasswordHardCoded  = 'Patkar'
+    UserAdminHardCoded = 'admin';
+    UserAdminPasswordHardCoded  = 'admin'
     /*User.findOne({username:username},(err,user)=>{
         if(user){
             if(password===user.password){
@@ -91,6 +98,11 @@ app.post('/addstudent',(req,res)=>{
         }
         else
         {
+            let totContent = Rollno + Mark1 + Mark2 + Mark3 + Mark4 + Mark5;
+            console.log(totContent)
+            let hash = SHA256(totContent)
+            console.log(hash);
+            //store in blockchain if success send mail
             const studentnew = new Student
             ({
                 name : name,
@@ -172,7 +184,32 @@ app.post('/addstudent',(req,res)=>{
         }
     })
 })
+app.post('/verifyMarksheet',(req,res)=>{
+    let content = "";
+    if(!req.files && !req.files.pdfFile){
+        res.status(400);
+        res.send('pdf not found')
+    }
+    pdfParse(req.files.pdfFile).then(result =>{
+        console.log(result.text)
+        res.send(result.text)
+        content = result.text;
+        let contentArray = content.split(" ");
+        let rollno = parseInt(contentArray[7]);
+        let mark1 = contentArray[10];
+        let mark2 = contentArray[13];
+        let mark3 = contentArray[16];
+        let mark4 = contentArray[19];
+        let mark5 = contentArray[22];
+        // console.log(`${rollno} = ${mark1} = ${mark2} = ${mark3} = ${mark4} = ${mark5}`);
+        let totContent = rollno + mark1 + mark2 + mark3 + mark4 + mark5;
+        console.log(totContent)
+        let hash = SHA256(totContent)
+        console.log(hash);
+        // compare the hash if same res.send(true)
+    })
 
+})
 
 app.post("/register", (req, res)=> {
     const { name, username, password,email,gender} = req.body
@@ -201,6 +238,6 @@ app.post("/register", (req, res)=> {
     
 }) 
 
-app.listen(3000,()=>{
+app.listen(3001,()=>{
     console.log("server is listening")
 })

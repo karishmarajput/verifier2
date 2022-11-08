@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Verify Marksheet</title>
+    </head>
+    <body style="display: flex;align-items: center;justify-content: center;font-size: 20px;flex-direction: column;">
+        <h1>Verify Marksheet</h1>
+        <!-- <form action="/verifyMarksheet" method="POST" style="margin-top: 150px;"> -->
+            <label for="marksheet" style="margin-top: 10px;">Marksheet: &nbsp;</label><br>
+            <input type="file" name="marksheet" id="file" style="margin-top: 10px;"/><br>
+            <input type="submit" id="submit" value="Upload" style="margin-top:10px;transform:translateX(110px)"/>
+        <!-- </form> -->
+        <br>
+        <br>
+        <script>
+            let file = document.getElementById('file');
+            let subBtn = document.getElementById('submit');
+            subBtn.addEventListener('click', ()=>{
+                const formData = new FormData();
+                formData.append("pdfFile", file.files[0]);
+                fetch("/verifyMarksheet",{
+                    method: "post",
+                    body: formData
+                }).then(response=>{
+                    console.log(response)
+                })
+            })
+        </script>
+    </body>
+    
+</html>
